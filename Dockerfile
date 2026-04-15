@@ -13,6 +13,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -ldflags="-w -s" -o /app/tas-server ./cmd/server
 
+
 # ── Final Stage ───────────────────────────────────────────────────────────────
 FROM alpine:3.19
 
@@ -26,6 +27,9 @@ COPY --from=builder /app/tas-server .
 COPY --from=builder /app/migrations ./migrations
 
 USER tasuser
+
+# Railway uses PORT env variable
+ENV PORT=8080
 
 EXPOSE 8080
 
