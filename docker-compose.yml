@@ -1,39 +1,19 @@
-services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: tas_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-tas_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tas_secret}
-      POSTGRES_DB: ${POSTGRES_DB:-tactical_armory}
-    ports:
-      - "5432:5432"
-    volumes:
-      - tas_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tas_user} -d ${POSTGRES_DB:-tactical_armory}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
+version: "3.9"
 
+services:
   server:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: tas_server
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-tas_user}:${POSTGRES_PASSWORD:-tas_secret}@postgres:5432/${POSTGRES_DB:-tactical_armory}?sslmode=disable
+      DATABASE_URL: ${DATABASE_URL}
       SERVER_PORT: ${SERVER_PORT:-8080}
       ADMIN_API_KEY: ${ADMIN_API_KEY}
       NODE_RATE_LIMIT_RPS: ${NODE_RATE_LIMIT_RPS:-10}
-      LOG_LEVEL: ${LOG_LEVEL:-info}1
-      ENV: ${ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ENV: ${ENV:-development}
     ports:
       - "${SERVER_PORT:-8080}:8080"
     healthcheck:
@@ -41,7 +21,3 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-
-volumes:
-  tas_pgdata:
-    driver: local
